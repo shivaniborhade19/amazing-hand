@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Country Info Demo</title>
+</head>
+<body>
+  <h2>🌍 Country Detection</h2>
+  <div id="country"></div>
+  <div id="flag"></div>
+
+  <script>
+    async function getCountryInfo() {
+      try {
+        // Get IP-based location data
+        const res = await fetch("https://ipapi.co/json/");
+        const data = await res.json();
+        const country = data.country_name;
+        const flagUrl = `https://flagcdn.com/48x36/${data.country_code.toLowerCase()}.png`;
+
+        // Display on page
+        document.getElementById("country").innerText = `You are from: ${country}`;
+        document.getElementById("flag").innerHTML = `<img src="${flagUrl}" alt="${country} flag" />`;
+
+        // Send to backend
+        await fetch("/api/country", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ country, flagUrl }),
+        });
+      } catch (err) {
+        console.error("Failed to get country info", err);
+      }
+    }
+
+    getCountryInfo();
+  </script>
+</body>
+</html>

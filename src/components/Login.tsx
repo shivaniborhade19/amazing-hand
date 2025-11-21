@@ -1,101 +1,86 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-
-// Fixed credentials - change these to your desired values
-const ADMIN_USERNAME = 'TenxerLabs';
-const ADMIN_PASSWORD = 'Tenxer12345';
+import { useState, useEffect, useMemo } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { fetchUserInfo } from "@/services/authService";
+import { v4 as uuidv4 } from "uuid";
+import { env } from "@/lib/env";
 
 interface LoginProps {
   onLogin: () => void;
 }
 
 const Login = ({ onLogin }: LoginProps) => {
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(true);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsLoading(true);
-    setError('');
+  const LOGIN_URL = useMemo(() => {
+    const baseUrl = env.AUTH_BASE_URL;
+    const tenantId = env.TENANT_ID;
 
-    // Simulate a small delay for better UX
-    await new Promise(resolve => setTimeout(resolve, 500));
+    const clientId = uuidv4();
+    const redirectUri = window.location.origin;
 
-    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      localStorage.setItem('isAuthenticated', 'true');
-      // small delay helps modal close before auto-upload fires
-      setTimeout(() => {
-        onLogin(); // ✅ parent handles hiding modal + triggering upload
-      }, 150);
-    } else {
-      setError('Invalid username or password');
-    }
-    
-    
-    setIsLoading(false);
-  };
+    const params = new URLSearchParams({
+      tenantId,
+      clientId,
+      redirect_uri: redirectUri,
+      minify: "true",
+      postParent: "true",
+    });
+
+    return `${baseUrl}?${params.toString()}`;
+  }, []);
+
+  useEffect(() => {
+    const handleMessage = async (event: MessageEvent) => {
+      const allowedOrigin = env.AUTH_BASE_URL.split("/auth")[0];
+
+      if (event.origin !== allowedOrigin) {
+        console.warn(
+          `Rejected message from unexpected origin: ${event.origin}`
+        );
+        return;
+      }
+
+      if (event.data?.accessToken) {
+        try {
+          await fetchUserInfo(event.data.accessToken);
+          onLogin();
+          setIsDialogOpen(false);
+        } catch (error) {
+          console.error("Login failed:", error);
+        }
+      }
+    };
+
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, [onLogin]);
 
   return (
-    
-    <Card className="w-full bg-[#fff9ef]">
-
-      <CardHeader className="space-y-1 text-center p-4 pb-2"> {/* 2. Reduced padding here (p-4 pb-2) */}
-          <CardTitle className="text-xl font-bold">Log In</CardTitle> {/* 3. Smaller title (text-xl) */}
-          <CardDescription className="text-xs">
-            Enter credentials to upload code 
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-4 pt-2"> {/* 4. Reduced padding here (p-4 pt-2) */}
-          <form onSubmit={handleSubmit} className="space-y-3"> {/* 5. Reduced space (space-y-3) */}
-            <div className="space-y-1"> {/* 6. Reduced space (space-y-1) */}
-              <Label htmlFor="username" className="text-sm">Username</Label>
-              <Input
-                id="username"
-                type="text"
-                placeholder="Enter username"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-                autoComplete="username"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                autoComplete="current-password"
-              />
-            </div>
-            
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            
-            <Button 
-              type="submit" 
-              className="w-full bg-green-600 hover:bg-green-700 text-white" 
-              disabled={isLoading}
-            >
-              {isLoading ? 'Signing in...' : 'Sign In & Uploding'}
-            </Button>
-          </form>
-          </CardContent>
-      </Card>
-    
-    // </div>
+    <Dialog open={isDialogOpen}
+     onOpenChange={(open) => setIsDialogOpen(open)}
+     >
+      <DialogContent className="w-[90vw] max-w-3xl">
+        <DialogHeader>
+          <DialogTitle />
+          <DialogDescription />
+        </DialogHeader>
+        <div style={{ height: "80vh" }}>
+          <iframe
+            src={LOGIN_URL}
+            width="100%"
+            height="100%"
+            style={{ border: "none" }}
+            title="Login"
+          />
+        </div>
+      </DialogContent>
+    </Dialog>
   );
 };
 

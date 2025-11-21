@@ -134,13 +134,17 @@ export default function TenXerInterface() {
   const [videoPlaying, setVideoPlaying] = useState(false);
   const [dotsClicked, setDotsClicked] = useState(false);
   const [disableTransition, setDisableTransition] = useState(false);
-  const { isAuthenticated, login } = useAuth();
+  const { isAuthenticated, login, logout } = useAuth();
   const [activeTab, setActiveTab] = useState<"files" | "search">("files");
   const [searchTerm, setSearchTerm] = useState("");
   const [newFileName, setNewFileName] = useState("");
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showRepo, setShowRepo] = useState(false);
   const [isVideoExtended, setIsVideoExtended] = useState(false);
+  useEffect(() => {
+    login(); 
+  }, []);
+
   useEffect(() => {
     if (viewMode === "split") {
       // Reset sidebar + input each time user enters split mode
@@ -887,22 +891,12 @@ if (viewMode === 'split' && selectedPoint) {
             />
 
             {showLogin && (
-              <div
-                className="fixed inset-0 flex items-center justify-center z-50 bg-black/50"
-                onClick={() => setShowLogin(false)}
-              >
-                <div
-                  className="bg-white rounded-lg shadow-lg p-6"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Login
-                    onLogin={() => {
-                      login();
-                      setShowLogin(false);
-                    }}
-                  />
-                </div>
-              </div>
+              <Login
+                onLogin={() => {
+                  login();
+                  setShowLogin(false);
+                }}
+              />
             )}
           </div>
         </div>

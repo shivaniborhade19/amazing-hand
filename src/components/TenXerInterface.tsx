@@ -335,18 +335,18 @@ const fingerCodeMap: Record<string, string> = {
   };
 // Split mode dots (new positions, red color)
 const splitModePoints: InteractivePoint[] = [
-  { id: "thumb", x: 38, y: 57, label: "Thumb", code: IndividualFingerControl },
-  { id: "finger3", x: 89, y: 43, label: "Ring Finger", code: IndividualFingerControl },
-  { id: "palm", x: 67, y: 39, label: "pinky finger", code: IndividualFingerControl }, // optional
-  { id: "wrist", x: 46, y: 38, label: "index finger", code: IndividualFingerControl }, // optional
+  { id: "thumb", x: 38, y: 53, label: "Thumb", code: IndividualFingerControl },
+  { id: "finger3", x: 76, y: 40, label: "Ring Finger", code: IndividualFingerControl },
+  { id: "palm", x: 57, y: 37, label: "pinky finger", code: IndividualFingerControl }, // optional
+  { id: "wrist", x: 36, y: 36, label: "index finger", code: IndividualFingerControl }, // optional
 ];
 
 // Landing page dots (old positions)
 const landingPoints: InteractivePoint[] = [
-  { id: "thumb", x: 45, y: 58, label: "Thumb", code: IndividualFingerControl },
-  { id: "finger3", x: 48, y: 36, label: "Ring Finger", code: IndividualFingerControl },
-  { id: "palm", x: 54, y: 38, label: "pinky finger", code: IndividualFingerControl }, // optional
-  { id: "wrist", x: 60, y: 41, label: "index finger", code: IndividualFingerControl }, // optional
+  { id: "thumb", x: 43, y: 56, label: "Thumb", code: IndividualFingerControl },
+  { id: "finger3", x: 42, y: 33, label: "Ring Finger", code: IndividualFingerControl },
+  { id: "palm", x: 49, y: 35, label: "pinky finger", code: IndividualFingerControl }, // optional
+  { id: "wrist", x: 56, y: 37, label: "index finger", code: IndividualFingerControl }, // optional
 ];
 const [splitSearchTerm, setSplitSearchTerm] = useState("");
 

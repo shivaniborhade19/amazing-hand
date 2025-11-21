@@ -419,11 +419,11 @@ if (isCodeIntent(prompt)) {
         target: "split",
         openFile: {
           name: "generated_code.ino",
-          content: "// Error generating code. Please try again.",
+          content: "// Error generating code gemini fails. Please try again.",
           language: "cpp",
         },
       },
-      response: "Sorry, I encountered an error generating the code.",
+      response: "Sorry, I encountered an error generating the code.gemini fails",
     };
   }
 }

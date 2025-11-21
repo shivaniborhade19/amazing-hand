@@ -8,7 +8,7 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "0.0.0.0",
     port: 9500,
-    allowedHosts: ['amazinghand.tenxerlabs.com', '192.168.0.24'],
+    allowedHosts: ['amazinghand.tenxerlabs.com', '192.168.0.24', '192.168.2.240'],
     proxy: {
       "/upload": {
         target: "http://127.0.0.1:5000",

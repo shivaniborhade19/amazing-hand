@@ -336,17 +336,17 @@ const fingerCodeMap: Record<string, string> = {
 // Split mode dots (new positions, red color)
 const splitModePoints: InteractivePoint[] = [
   { id: "thumb", x: 38, y: 57, label: "Thumb", code: IndividualFingerControl },
-  { id: "finger3", x: 82, y: 44, label: "Ring Finger", code: IndividualFingerControl },
-  { id: "palm", x: 64, y: 40, label: "pinky finger", code: IndividualFingerControl }, // optional
-  { id: "wrist", x: 44, y: 38, label: "index finger", code: IndividualFingerControl }, // optional
+  { id: "finger3", x: 89, y: 43, label: "Ring Finger", code: IndividualFingerControl },
+  { id: "palm", x: 67, y: 39, label: "pinky finger", code: IndividualFingerControl }, // optional
+  { id: "wrist", x: 46, y: 38, label: "index finger", code: IndividualFingerControl }, // optional
 ];
 
 // Landing page dots (old positions)
 const landingPoints: InteractivePoint[] = [
-  { id: "thumb", x: 44, y: 58, label: "Thumb", code: IndividualFingerControl },
-  { id: "finger3", x: 46, y: 35, label: "Ring Finger", code: IndividualFingerControl },
-  { id: "palm", x: 53, y: 38, label: "pinky finger", code: IndividualFingerControl }, // optional
-  { id: "wrist", x: 60, y: 43, label: "index finger", code: IndividualFingerControl }, // optional
+  { id: "thumb", x: 45, y: 58, label: "Thumb", code: IndividualFingerControl },
+  { id: "finger3", x: 48, y: 36, label: "Ring Finger", code: IndividualFingerControl },
+  { id: "palm", x: 54, y: 38, label: "pinky finger", code: IndividualFingerControl }, // optional
+  { id: "wrist", x: 60, y: 41, label: "index finger", code: IndividualFingerControl }, // optional
 ];
 const [splitSearchTerm, setSplitSearchTerm] = useState("");
 
@@ -456,8 +456,10 @@ const handleStartHand = async () => {
 const [showExtraButton, setShowExtraButton] = useState(false);
 const [extraUploading, setExtraUploading] = useState(false);
 const [extraTerminalOutput, setExtraTerminalOutput] = useState("");
+const [isStopping, setIsStopping] = useState(false);
 const handleUploadExtraCode = async () => {
   setExtraUploading(true);
+  setIsStopping(true);   // 🔥 show "Stopping..."
 
   try {
     const res = await fetch("/upload", {
@@ -471,32 +473,37 @@ const handleUploadExtraCode = async () => {
 
     const data = await res.json();
 
-    // ✅ Listen to backend logs silently
+    // Listen to backend logs
     const eventSource = new EventSource("/logs");
+
     eventSource.onmessage = (event) => {
       const logLine = event.data.trim();
 
-      // Detect the final "uploaded successfully" line
       if (logLine.includes("uploaded successfully")) {
-        // ✅ Reset UI to half green main button
+        // 🔥 STOP COMPLETE → reset all
         setUploadComplete(false);
-        setShowExtraButton(false);
         setIsUploading(false);
         setExtraUploading(false);
+        setIsStopping(false);     // 🔥 stop text ends
+        setUploadProgress(0);
+
         eventSource.close();
       }
     };
 
     eventSource.onerror = () => {
-      console.error("Log stream closed or failed during stop upload.");
-      eventSource.close();
+      console.error("Stop upload failed SSE.");
       setExtraUploading(false);
+      setIsStopping(false);
+      eventSource.close();
     };
   } catch (err) {
     console.error("Stop upload failed:", err);
     setExtraUploading(false);
+    setIsStopping(false);
   }
 };
+
 
 
   const handleBackFromVideo = () => {
@@ -997,11 +1004,11 @@ if (viewMode === 'split' && selectedPoint) {
          <div className="w-full flex-none relative flex flex-col justify-center items-center">
           <div className="relative w-full flex-1">
             <div className="relative w-full pb-[56.25%] rounded-2xl overflow-hidden shadow-md">
-              <iframe
+            <iframe
                 src="https://media1.tenxerlabs.com/stream/amazing_hand.html?room=2000&audio=true"
                 className="absolute top-0 left-0 w-full h-full object-cover border-none rounded-2xl"
                 allow="camera;microphone;autoplay;fullscreen"
-              />
+              />
               {/* AskInput */}
               <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-30 w-[70%] max-w-[600px]">
                 <AskInput
@@ -1135,9 +1142,20 @@ if (viewMode === 'split' && selectedPoint) {
     {/* 🔹 Bottom center image */}
     
 
-    {/* 🔹 Right-top buttons */}
-  {/* 🔹 Right-top buttons */}
-<div className="absolute top-4 right-4 z-40 flex items-center space-x-3">
+    
+{/* 🔹 Right-top buttons */}
+{/* 🔹 Right-top buttons */}
+<div className="absolute top-4 right-4 z-40 flex items-center space-x-3 h-[50px]">
+
+  {/* 🏠 Home Button — MOVED HERE */}
+  <Button
+    onClick={handleHomeClick}
+    variant="outline"
+    className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-200 focus:ring-0 px-4 py-2 rounded-md text-[14px] font-mono"
+  >
+    <Home className="w-5 h-5 text-black" /> Home
+  </Button>
+
   {/* 💻 Code Button */}
   <button
     onClick={() =>
@@ -1156,63 +1174,46 @@ if (viewMode === 'split' && selectedPoint) {
 
   {/* ✨ Hand Magic Button + Stop */}
   <div className="relative inline-block">
-    <button
-      onClick={handleStartHand}
-      disabled={isUploading}
-      className={`relative overflow-hidden px-6 py-1.5 rounded-md border text-[14px] font-mono transition-all duration-500
-        ${
-          uploadComplete
-            ? "bg-white text-black border-green-600"
-            : "bg-white text-black border-gray-500 hover:bg-green-600 hover:text-black"
-        }`}
-    >
-      {(isUploading || uploadComplete) && (
-        <span
-          className="absolute left-0 top-0 h-full bg-green-600 transition-all duration-500 ease-linear"
-          style={{
-            width: `${uploadProgress}%`,
-            zIndex: 0,
-          }}
-        ></span>
-      )}
-      <span className="relative z-10">
-        {isUploading
-          ? "Uploading..."
-          : uploadComplete
-          ? "Magic Done!"
-          : "Do Hand Magic"}
-      </span>
-    </button>
+  <button
+  onClick={() => {
+    if (uploadComplete) {
+      // 🔥 STOP MODE
+      handleUploadExtraCode();
+    } else {
+      // 🔥 START MODE
+      handleStartHand();
+    }
+  }}
+  disabled={isUploading || isStopping}
+  className={`relative overflow-hidden px-6 py-1.5 rounded-md border text-[14px] font-mono transition-all duration-500
+    ${
+      uploadComplete
+        ? "bg-red-500 text-white border-red-600 hover:bg-red-600"
+        : "bg-white text-black border-gray-500 hover:bg-green-600 hover:text-black"
+    }`}
+>
+  {(isUploading || isStopping) && (
+    <span
+      className="absolute left-0 top-0 h-full bg-green-600 transition-all duration-500 ease-linear"
+      style={{ width: `${uploadProgress}%`, zIndex: 0 }}
+    ></span>
+  )}
 
-    {/* 🛑 Stop Button */}
-    {uploadComplete && (
-      <div className="mt-2 flex justify-end">
-        <button
-          onClick={handleUploadExtraCode}
-          disabled={extraUploading}
-          className={`px-3 py-1 rounded-md text-[14px] font-mono transition-all duration-500 border ${
-            extraUploading
-              ? "bg-gray-400 text-white border-gray-400"
-              : "bg-red-500 hover:bg-red-600 text-white border-blue-700"
-          }`}
-        >
-          {extraUploading ? "Stopping..." : "Stop"}
-        </button>
-      </div>
-    )}
+  <span className="relative z-10">
+    {isUploading
+      ? "Uploading..."
+      : isStopping
+      ? "Stopping..."
+      : uploadComplete
+      ? "Stop"
+      : "Do Hand Magic"}
+  </span>
+</button>
+
   </div>
+
 </div>
 
-    {/* 🔹 Home button */}
-    <div className="absolute bottom-6 right-6 z-30">
-      <Button
-        onClick={handleHomeClick}
-        variant="outline"
-        className="bg-white text-gray-700 border border-gray-300 hover:bg-gray-200 focus:ring-0"
-      >
-        <Home className="w-5 h-5 text-black" /> Home
-      </Button>
-    </div>
 
     {/* 🔹 AskInput bar (fixed & responsive inside ratio box) */}
     <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-50 w-[70%] max-w-[600px] pointer-events-auto">

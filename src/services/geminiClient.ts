@@ -214,7 +214,7 @@ Return ONLY valid JSON with this exact structure:
       return result.response.text().trim();
     } catch (error) {
       console.error('Error generating general response:', error);
-      return 'I encountered an error while processing your request.';
+      return 'I encountered an error while processing your request. gemini reach to limits';
     }
   }
   /** 
